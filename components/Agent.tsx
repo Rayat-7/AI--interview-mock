@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { set } from "zod";
 import {vapi} from "@/lib/vapi.sdk";
+import { interviewer } from "@/constants";
 
 enum CallStatus {
     INACTIVE = 'INACTIVE',
@@ -17,7 +18,7 @@ interface SavedMessage {
     content: string;
 }
 
-const Agent = ({ userName,userId,type }: AgentProps) => {
+const Agent = ({ userName,userId,type,interviewId,questions }: AgentProps) => {
   const router = useRouter();
    const[isSpeaking ,setIsSpeaking]=useState(false);
    const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE)
@@ -55,8 +56,30 @@ const Agent = ({ userName,userId,type }: AgentProps) => {
 
         },[]);
 
+        const handleGenerateFeedback = async (messages: SavedMessage[]) => {
+          console.log('Generate Feedback here.')
+          const {success ,id} = {
+            success:true,
+            id:'feedback-id'
+          }
+          //todo server action to save feedback
+          if(success && id) {
+            router.push(`/interview/${interviewId}/feedback`);
+          }
+          else {
+            console.error("Error saving feedback");
+            router.push('/');
+          }
+        }
     useEffect(() => {
-        if (callStatus === CallStatus.FINISHED)router.push('/');
+      if(callStatus === CallStatus.FINISHED){
+        if(type === 'generate') {
+          router.push('/');}
+        else {
+          handleGenerateFeedback(messages)
+        }
+      }
+        
 
     }, [messages, callStatus,type, userId]);
 
